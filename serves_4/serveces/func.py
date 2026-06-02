@@ -124,7 +124,4 @@ def cahnge_mark(token: str):
             return result
 
 
-if __name__ == '__main__':
-    
-    ...
 
