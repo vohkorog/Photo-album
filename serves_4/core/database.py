@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 engine = create_engine(
     url = config.DATABASE_URL,
-    echo = True
+    echo = False
 )
 
 session_factory = sessionmaker(engine)

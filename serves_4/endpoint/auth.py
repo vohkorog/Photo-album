@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import uvicorn
 from fastapi import FastAPI, Cookie
 from schemas.user import UserLoginScheme
-from serveces.func import login_user
+from serveces.func import db, user_db
 from fastapi.responses import JSONResponse, RedirectResponse
 
 
@@ -16,16 +16,9 @@ app = FastAPI()
 def main_root():
     return f'root'
 
-@app.get('/root')
-def root(access_token: str = Cookie(None), user_id: str = Cookie(None), login: str = Cookie(None)):
-    if not access_token:
-        return RedirectResponse(url="/login", status_code=303)
-    
-    return {"message": f"Welcome {login}!", "user_id": user_id}
-
 @app.post('/login')
 def login(data: UserLoginScheme):
-    user = login_user(
+    user = user_db.login_user(
         login= data.username,
         password= data.password
     )
