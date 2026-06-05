@@ -3,7 +3,6 @@ import sys
 import os
 # Добавляем родительскую папку (serves_4) в путь
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.auth.services import db, user_db
 from fastapi import FastAPI
 from src.albums.router import router as router_albums
 from src.auth.router import router as router_auth

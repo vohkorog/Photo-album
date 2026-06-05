@@ -3,7 +3,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter
 from src.auth.services import db, user_db
 from fastapi.responses import JSONResponse, RedirectResponse
 from src.auth.schemas import UserLoginScheme, UserCreateScheme

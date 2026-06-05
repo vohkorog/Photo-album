@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from src.albums.schemas import AlbumsCreateScheme
 from src.auth.services import user_db
 from src.albums.services import album_db
-from database import session_factory
+
 
 router = APIRouter(prefix="/albums", tags=["albums"])
 

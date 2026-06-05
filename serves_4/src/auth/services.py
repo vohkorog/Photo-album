@@ -5,9 +5,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from src.models import Base, UserModel, AlbumModel
+from src.models import Base, UserModel
 from src.database import engine, session_factory
-from datetime import datetime
 from src.security import get_password_hash, verify_password, create_access_token, decode_token
 from sqlalchemy import select
 
