@@ -3,12 +3,16 @@ import os
 
 # Добавляем родительскую папку (serves_4) в путь
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+from fastapi import HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from src.models import Base, UserModel, AlbumModel
 from src.database import engine, session_factory
 from datetime import datetime
 from src.security import get_password_hash, verify_password, create_access_token, decode_token
 from sqlalchemy import select
+
+
+security = HTTPBearer()
 
 class db:
     @staticmethod
@@ -32,7 +36,8 @@ class user_db:
             session.add_all([user])
             session.commit()
             session.refresh(user)
-            return user
+            
+        return user
     
     @staticmethod
     def get_user_by_login(login: str):
@@ -91,7 +96,7 @@ class user_db:
             }
 
     @staticmethod
-    def get_current_user_from_token(token: str):
+    def get_current_user_from_token_bd(token: str):
 
         result = user_db.verify_token(token)
         if not result["success"]:
@@ -100,6 +105,19 @@ class user_db:
             user = session.query(UserModel).filter(UserModel.id == result["user_id"]).first()
             return user
     
+    @staticmethod
+    def get_current_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+        token = credentials.credentials  # Токен из заголовка Authorization
+        
+        result = user_db.verify_token(token)
+        if not result["success"]:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        with session_factory() as session:
+            user = session.query(UserModel).filter(UserModel.id == result["user_id"]).first()
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            return {"id": user.id, "login": user.login}  
 
     @staticmethod
     def delete_acc_by_id(id: int):
@@ -113,19 +131,19 @@ class user_db:
     @staticmethod
     def delete_acc_by_token(token: str):
         try:
-            user = user_db.get_current_user_from_token(token)
+            user = user_db.get_current_user_from_token_bd(token)
         except:
             print('проблема с токеном')
         with session_factory() as session:
             session.delete(user)
             session.commit()
-            return user
+        return user
         
     
     @staticmethod        
     def cahnge_mark(token: str):
         try:
-            user = user_db.get_current_user_from_token(token)
+            user = user_db.get_current_user_from_token_bd(token)
         except:
             print('проблема с токеном')
 

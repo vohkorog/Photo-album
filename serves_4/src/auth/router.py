@@ -3,37 +3,39 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import uvicorn
-from fastapi import FastAPI, Cookie
+from fastapi import FastAPI, APIRouter
 from src.auth.services import db, user_db
 from fastapi.responses import JSONResponse, RedirectResponse
-from src.auth.schemas import UserLoginScheme
+from src.auth.schemas import UserLoginScheme, UserCreateScheme
 
-app = FastAPI()
+router = APIRouter(prefix="/auth", tags=["authentication"])
 
-@app.get('/')
+@router.get('/')
 def main_root():
-    return f'root'
+    return f'auth root'
 
-@app.post('/login')
+
+@router.post('/login')
 def login(data: UserLoginScheme):
     user = user_db.login_user(
         login= data.username,
         password= data.password
     )
 
-    response = RedirectResponse(url='/root')
-    response.set_cookie(
-        key="access_token",
-        value=user["access_token"],
-        httponly=True,  # Защита от XSS
-        max_age=1800,   # 30 минут
-        secure=False,   # True для HTTPS
-        samesite="lax"
-    )
-    response.set_cookie(key="user_id", value=str(user["user_id"]))
-    response.set_cookie(key="login", value=user["login"])
+    return user
+
+@router.post('/signin')
+def sigin(data: UserCreateScheme):
+    user = user_db.register_user(
+        login= data.username,
+        email=data.email,
+        password=data.password
+    )    
+    return f'Здравствуйте, {user.login}'
+""" 
+@router.psot('delete_albums')
+def delete_albums(): """
+
     
-    return response
    
 

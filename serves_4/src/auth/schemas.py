@@ -7,7 +7,6 @@ from typing import Dict
 from pydantic import BaseModel, EmailStr
 
 
-
 class UserScheme():
     id: int
     email: EmailStr

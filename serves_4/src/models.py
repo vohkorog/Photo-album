@@ -38,7 +38,7 @@ class AlbumModel(Base):
     create_at: Mapped[time_now]
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="albums")
-    photos: Mapped[list["PhotoModel"]] = relationship("Photo", back_populates="album")
+    photos: Mapped[list["PhotoModel"]] = relationship(lambda: PhotoModel, back_populates="album")
 
 
 class PhotoModel(Base):
