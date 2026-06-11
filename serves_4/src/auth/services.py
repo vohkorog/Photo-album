@@ -124,6 +124,3 @@ class user_db:
             result.mark = 'No active'
             session.commit()
             return result
-
-            
-    

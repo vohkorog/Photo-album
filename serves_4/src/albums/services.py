@@ -43,7 +43,7 @@ class album_db:
     def get_user_albums(user_id: int):
         
         with session_factory() as session:
-            query = (select(AlbumModel).where(AlbumModel.id == user_id))
+            query = (select(AlbumModel).where(AlbumModel.user_id == user_id))
             result = session.execute(query)
             album = result.scalars().all()
             return album

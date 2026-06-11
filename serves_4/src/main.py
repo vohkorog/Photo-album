@@ -6,6 +6,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import FastAPI
 from src.albums.router import router as router_albums
 from src.auth.router import router as router_auth
+from src.auth.services import db
+
 import uvicorn
 
 
