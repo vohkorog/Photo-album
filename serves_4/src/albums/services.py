@@ -1,10 +1,26 @@
 
-from src.models import AlbumModel
+from src.models import AlbumModel, PhotoModel
 from src.database import session_factory
 from sqlalchemy import select
-    
+from fastapi import UploadFile, HTTPException
+import uuid
+import shutil
+from pathlib import Path
+
+# Папка для загрузки фото
+BASE_DIR = Path(__file__).resolve().parent.parent  # на уровень выше
+UPLOAD_DIR = BASE_DIR / "uploads" / "photos"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
 class album_db:
 
+    ALLOWED_TYPES = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/gif": ".gif",
+        "image/webp": ".webp"}
+ 
     @staticmethod
     def create_album(title: str,
                      user_id: int,  
@@ -47,5 +63,45 @@ class album_db:
             result = session.execute(query)
             album = result.scalars().all()
             return album
-
     
+    @staticmethod 
+    def generate_filename(extension: str) -> str:
+        return f"{uuid.uuid4()}{extension}"
+
+    @staticmethod
+    def upload_photo(user_id: int, album_id:int, file: UploadFile):
+        album = album_db.get_album(user_id=user_id, album_id=album_id)
+        
+        if album is None:
+            raise HTTPException(status_code=404, detail="Альбом не найден")
+        
+        if file.content_type not in album_db.ALLOWED_TYPES:
+            raise HTTPException(status_code=400, detail="Неверный тип файла")
+
+        extension = album_db.ALLOWED_TYPES[file.content_type]
+        safe_filename = album_db.generate_filename(extension)
+        file_path = UPLOAD_DIR / safe_filename
+
+        try:
+
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+        except OSError as e:
+            raise HTTPException(status_code=500, detail='Не удалось сохранить файл')
+        
+        try:
+            with session_factory() as session:
+                photo = PhotoModel(
+                    filename=safe_filename,
+                    file_path=str(file_path),
+                    file_size=file_path.stat().st_size,
+                    content_type=file.content_type,
+                    album_id=album.id
+                )
+                session.add(photo)
+                session.commit()
+                session.refresh(photo)
+                return photo
+        except Exception:
+            file_path.unlink(missing_ok=True)  # откатываем файл с диска при ошибке БД
+            raise
