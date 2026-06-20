@@ -16,5 +16,6 @@ def drop_all():
 
 @router.get('/all_users', summary='Вывод всех пользователей')
 def all_users():
+    """Вывод всех пользователей"""
     users = user_db.get_all_users()
     return users

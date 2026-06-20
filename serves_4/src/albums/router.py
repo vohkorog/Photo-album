@@ -62,15 +62,22 @@ def get_photos_alum(album_id: int,
     return photos
 
 @router.get('/photos/{photo_id}/file', summary="Получение изобрадение фото")
-def get_photo_file(photo_id: int, current_user: dict = Depends(user_db.get_current_user_from_token)):
+def get_photo_file(photo_id: int, album_id: int, current_user: dict = Depends(user_db.get_current_user_from_token)):
     """Получение изображения фото по id у авторезированного пользователя"""
-    photo = photo_db.get_photo(photo_id=photo_id, user_id=current_user['id'])
+    photo = photo_db.get_photo(photo_id=photo_id, album_id=album_id, user_id=current_user['id'])
     
     return FileResponse(
         path=photo.file_path,
         media_type=photo.content_type,
         filename=photo.filename
     )
+
+@router.get('/get_all_photos_album', summary='Получение всех фото альбома')
+def get_all_photos_album():
+    """Получение всех фото альбома"""
+    ...
+
+
 
 @router.post('/set_share_album', summary="Поделиться альбомом")
 def set_share_album(shared_user_id: int, 
