@@ -10,21 +10,15 @@ from src.auth.schemas import UserLoginScheme, UserCreateScheme
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
-@router.get('/')
-def main_root():
-    return f'auth root'
-
-
-@router.post('/login')
+@router.post('/login', summary='Логирование пользователя')
 def login(data: UserLoginScheme):
     user = user_db.login_user(
         login= data.username,
         password= data.password
     )
-
     return user
 
-@router.post('/signin')
+@router.post('/signin', summary='Регистрация пользователя')
 def sigin(data: UserCreateScheme):
     user = user_db.register_user(
         login= data.username,
@@ -33,10 +27,3 @@ def sigin(data: UserCreateScheme):
     )    
     return f'Здравствуйте, {user.login}'
 
-
-    
-   
-@router.get('/all_users')
-def all_users():
-    users = user_db.get_all_users()
-    return users

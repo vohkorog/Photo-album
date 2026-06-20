@@ -1,8 +1,6 @@
 from sqlalchemy import create_engine
 from src.config import config
 from sqlalchemy.orm import sessionmaker
-from models import Base
-
 
 engine = create_engine(
     url = config.DATABASE_URL,
@@ -16,11 +14,3 @@ def get_session():
         yield session
 
 
-class db:
-    @staticmethod
-    def create_model():
-        Base.metadata.create_all(engine)
-
-    @staticmethod
-    def delete_model():
-        Base.metadata.drop_all(engine)
