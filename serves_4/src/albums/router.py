@@ -38,12 +38,12 @@ def delete_album(data: AlbumsDeleteScheme,
     return f'Альбом успешно удален {album}'
 
 @router.post('/{album_id}/photos', response_model=PhotoScheme, summary="Добавление фото к альбому")
-def add_photo(albums_id: int, 
+def add_photo(album_id: int, 
               current_user: dict = Depends(user_db.get_current_user_from_token), 
               file: UploadFile = File(...)):
     
     """Добавление по id альбома у авторезированного пользователя"""
-    photo = photo_db.upload_photo(user_id=current_user['id'], album_id=albums_id, file = file)
+    photo = photo_db.upload_photo(user_id=current_user['id'], album_id=album_id, file = file)
     return photo
 
 @router.delete('/delete_photos', response_model=PhotoDeleteScheme, summary="Удаление фото у альбома")
