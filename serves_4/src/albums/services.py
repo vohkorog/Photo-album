@@ -64,8 +64,8 @@ class photo_db:
             raise
 
     @staticmethod
-    def delete_photo(photo_id: int, user_id: int):
-        photo = photo_db.get_photo(photo_id =photo_id, user_id=user_id)
+    def delete_photo(photo_id: int, album_id, user_id: int):
+        photo = photo_db.get_photo(photo_id =photo_id, album_id=album_id, user_id=user_id)
         # Удаляем файл
         photo_path = Path(photo.file_path)
         if photo_path.exists():
