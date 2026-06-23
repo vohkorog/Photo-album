@@ -517,11 +517,6 @@ body {
   <div class="modal">
     <div class="modal-title">Поделиться альбомом</div>
 
-    <div class="share-tabs">
-      <div class="share-tab active" onclick="switchShareTab('give')" id="stab-give">Дать доступ</div>
-      <div class="share-tab" onclick="switchShareTab('link')" id="stab-link">Ссылка</div>
-    </div>
-
     <!-- Give access tab -->
     <div id="share-give">
       <div class="share-info">
@@ -542,13 +537,6 @@ body {
     <div id="share-link" style="display:none">
       <div class="share-info">
         Скопируйте ссылку-приглашение и отправьте её другому пользователю. После перехода по ней он попадёт сразу на этот альбом (если авторизован).
-      </div>
-      <div class="form-group">
-        <label class="form-label">Ссылка</label>
-        <div style="display:flex;gap:8px">
-          <input class="form-input" id="share-link-val" readonly style="font-family:monospace;font-size:12px" />
-          <button class="btn btn-secondary btn-sm" onclick="copyShareLink()">Копировать</button>
-        </div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('modal-share')">Закрыть</button>
@@ -999,17 +987,6 @@ async function doShareAlbum() {
     errEl.textContent = 'Ошибка соединения с сервером';
     errEl.classList.add('show');
   }
-}
-
-function copyShareLink() {
-  const input = document.getElementById('share-link-val');
-  if (!input || !input.value) {
-    toast('Ссылка не сгенерирована', 'error');
-    return;
-  }
-  input.select();
-  document.execCommand('copy');
-  toast('Ссылка скопирована', 'success');
 }
 </script>
 </body>
