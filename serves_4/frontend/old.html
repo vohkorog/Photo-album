@@ -362,6 +362,28 @@ body {
 .toast.error { background: var(--danger); }
 @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
+/* user list in share modal */
+.user-list-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.user-list-item:last-child { border-bottom: none; }
+.user-list-item:hover { background: var(--bg); }
+.user-list-item.selected { background: var(--accent-light); }
+.user-list-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--text); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; flex-shrink: 0;
+}
+.user-list-info { flex: 1; min-width: 0; }
+.user-list-name { font-size: 13px; font-weight: 500; }
+.user-list-email { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-list-check { font-size: 16px; color: var(--accent); display: none; }
+.user-list-item.selected .user-list-check { display: block; }
+
 /* shared albums section */
 .section-divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
 .section-subtitle { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: var(--muted); }
@@ -514,43 +536,18 @@ body {
 <div class="modal-overlay" id="modal-share">
   <div class="modal">
     <div class="modal-title">Поделиться альбомом</div>
-
-    <div class="share-tabs">
-      <div class="share-tab active" onclick="switchShareTab('give')" id="stab-give">Дать доступ</div>
-      <div class="share-tab" onclick="switchShareTab('link')" id="stab-link">Ссылка</div>
+    <div class="share-info">
+      Выберите пользователя, которому хотите открыть доступ к альбому «<span id="share-album-name"></span>».
     </div>
 
-    <!-- Give access tab -->
-    <div id="share-give">
-      <div class="share-info">
-        Введите ID пользователя, которому хотите открыть доступ к альбому «<span id="share-album-name"></span>».
-      </div>
-      <div class="form-group">
-        <label class="form-label">ID пользователя</label>
-        <input class="form-input" id="share-user-id" type="number" placeholder="например, 42" />
-      </div>
-      <div id="share-error" class="error-msg"></div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal('modal-share')">Отмена</button>
-        <button class="btn btn-primary" onclick="doShareAlbum()">Открыть доступ</button>
-      </div>
-    </div>
+    <div id="share-users-loading" style="text-align:center;padding:1rem;color:var(--muted);font-size:13px">Загрузка пользователей...</div>
 
-    <!-- Share link tab -->
-    <div id="share-link" style="display:none">
-      <div class="share-info">
-        Скопируйте ссылку-приглашение и отправьте её другому пользователю. После перехода по ней он попадёт сразу на этот альбом (если авторизован).
-      </div>
-      <div class="form-group">
-        <label class="form-label">Ссылка</label>
-        <div style="display:flex;gap:8px">
-          <input class="form-input" id="share-link-val" readonly style="font-family:monospace;font-size:12px" />
-          <button class="btn btn-secondary btn-sm" onclick="copyShareLink()">Копировать</button>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal('modal-share')">Закрыть</button>
-      </div>
+    <div id="share-users-list" style="display:none;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:1rem;"></div>
+
+    <div id="share-error" class="error-msg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-share')">Отмена</button>
+      <button class="btn btn-primary" id="btn-do-share" onclick="doShareAlbum()" disabled>Открыть доступ</button>
     </div>
   </div>
 </div>
@@ -999,8 +996,7 @@ function selectShareUser(item, userId) {
   document.getElementById('btn-do-share').disabled = false;
 }
 
-async function doShareAlbum() 
-{
+async function doShareAlbum() {
   const errEl = document.getElementById('share-error');
   errEl.classList.remove('show');
   if (!selectedShareUserId) { errEl.textContent = 'Выберите пользователя'; errEl.classList.add('show'); return; }
