@@ -35,8 +35,7 @@ def delete_album(albums_id: int,
     
     """Удаление альбома оп id у авторезированно пользователя"""
     album = album_db.delete_user_album(user_id = current_user['id'], id= albums_id)
-    message = "Альбом ", album.title," успешно удален"
-    return message
+    return f'Альбом {album.title} успешно удален'
 #Фото
 @router.post('/{album_id}/photos', response_model=PhotoScheme, summary="Добавление фото к альбому")
 def add_photo(album_id: int, 

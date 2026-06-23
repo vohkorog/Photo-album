@@ -35,7 +35,7 @@ class AlbumModel(Base):
     #связи
     members: Mapped[list["MemberModel"]] = relationship("MemberModel", back_populates="share_albums")
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="albums")
-    photos: Mapped[list["PhotoModel"]] = relationship("PhotoModel", back_populates="album")
+    photos: Mapped[list["PhotoModel"]] = relationship("PhotoModel", back_populates="album", cascade="all, delete-orphan")
 
 
 class PhotoModel(Base):
