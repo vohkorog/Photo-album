@@ -96,7 +96,7 @@ class user_db:
     def change_pass(user_login:str, user_id: int, old_password: str, new_password: str):
         user = user_db.authenticate_user(login=user_login, password= old_password)
         if not user:
-            return f'Неверный логин'
+            return f'Неверный логин или пароль'
         else:
             with session_factory() as session:
                 new_password_hash = get_password_hash(new_password)

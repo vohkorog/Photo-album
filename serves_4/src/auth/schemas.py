@@ -14,3 +14,8 @@ class UserCreateScheme(BaseModel):
 class UserLoginScheme(BaseModel):
     username: str
     password: str
+
+class UserChangingPassScheme(BaseModel):
+    old_password: str
+    new_password: str
+

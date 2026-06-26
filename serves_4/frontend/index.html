@@ -153,7 +153,10 @@ body {
   background: var(--text); color: #fff;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
 }
+.avatar:hover { opacity: 0.7; }
 
 .main-content { padding: 2rem; max-width: 1100px; margin: 0 auto; width: 100%; }
 
@@ -164,7 +167,32 @@ body {
   flex-wrap: wrap;
   gap: 10px;
 }
-.section-title { font-size: 20px; font-weight: 600; }
+.section-title { 
+  font-size: 20px; 
+  font-weight: 600; 
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.section-title:hover { opacity: 0.7; }
+.section-title.editable::after {
+  font-size: 14px;
+  opacity: 0.5;
+}
+.section-title.editable:hover::after { opacity: 1; }
+
+.section-desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.section-desc:hover { opacity: 0.7; }
+.section-desc.editable::after {
+  font-size: 12px;
+  opacity: 0.5;
+}
+.section-desc.editable:hover::after { opacity: 1; }
 
 /* ── ALBUM GRID ── */
 .albums-grid {
@@ -333,7 +361,7 @@ body {
   font-size: 14px;
 }
 .shared-user-item:last-child { border-bottom: none; }
-.shared-user-item .user-info { display: flex; align-items: center; gap: 8px; }
+.shared-user-item .user-info { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .shared-user-item .user-id { color: var(--muted); font-size: 12px; }
 .shared-user-item .remove-btn {
   background: var(--danger-light);
@@ -479,7 +507,7 @@ body {
       </div>
     </div>
     <div class="topbar-right">
-      <div class="avatar" id="user-avatar">U</div>
+      <div class="avatar" id="user-avatar" onclick="openProfileModal()" title="Нажмите для редактирования профиля">U</div>
       <button class="btn btn-secondary btn-sm" onclick="doLogout()">Выйти</button>
     </div>
   </header>
@@ -507,11 +535,12 @@ body {
       <div class="section-head">
         <div>
           <div class="section-title" id="album-title-heading"></div>
-          <div style="font-size:13px;color:var(--muted);margin-top:2px" id="album-desc-heading"></div>
+          <div class="section-desc" id="album-desc-heading"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm" id="btn-share-album" onclick="openShareModal()">🔗 Поделиться</button>
           <button class="btn btn-secondary btn-sm" id="btn-manage-shared" onclick="openManageSharedModal()" style="display:none">👥 Управление доступом</button>
+          <button class="btn btn-secondary btn-sm" id="btn-edit-album" onclick="openEditAlbumModal()">✏️ Редактировать</button>
           <button class="btn btn-danger btn-sm" id="btn-delete-album" onclick="confirmDeleteAlbum()">Удалить альбом</button>
         </div>
       </div>
@@ -541,6 +570,62 @@ body {
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-new-album')">Отмена</button>
       <button class="btn btn-primary" onclick="createAlbum()">Создать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Album Modal -->
+<div class="modal-overlay" id="modal-edit-album">
+  <div class="modal">
+    <div class="modal-title">✏️ Редактирование альбома</div>
+    <div class="form-group">
+      <label class="form-label">Название</label>
+      <input class="form-input" id="edit-album-title" placeholder="Название альбома" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Описание</label>
+      <input class="form-input" id="edit-album-desc" placeholder="Описание альбома" />
+    </div>
+    <div id="edit-album-error" class="error-msg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-album')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveAlbumChanges()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal (изменение пароля) -->
+<div class="modal-overlay" id="modal-profile">
+  <div class="modal">
+    <div class="modal-title">👤 Настройки профиля</div>
+    
+    <div class="share-info">
+      Пользователь: <strong id="profile-username">username</strong>
+      <br>
+      Email: <strong id="profile-email">email@example.com</strong>
+    </div>
+
+    <div style="margin-top: 1rem;">
+      <div class="form-group">
+        <label class="form-label">Текущий пароль</label>
+        <input class="form-input" id="profile-old-password" type="password" placeholder="Введите текущий пароль" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Новый пароль</label>
+        <input class="form-input" id="profile-new-password" type="password" placeholder="Введите новый пароль" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Подтверждение нового пароля</label>
+        <input class="form-input" id="profile-confirm-password" type="password" placeholder="Подтвердите новый пароль" />
+      </div>
+    </div>
+
+    <div id="profile-error" class="error-msg"></div>
+    <div id="profile-success" class="error-msg" style="background:var(--success);color:#fff;border-color:var(--success);display:none;"></div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-profile')">Отмена</button>
+      <button class="btn btn-primary" onclick="changePassword()">Изменить пароль</button>
     </div>
   </div>
 </div>
@@ -699,8 +784,179 @@ function doLogout() {
 function enterApp() {
   document.getElementById('page-auth').classList.remove('active');
   document.getElementById('page-app').classList.add('active');
-  document.getElementById('user-avatar').textContent = (currentUser.username[0] || 'U').toUpperCase();
+  const avatar = document.getElementById('user-avatar');
+  avatar.textContent = (currentUser.username[0] || 'U').toUpperCase();
+  avatar.onclick = openProfileModal;
   goAlbums();
+}
+
+// ── PROFILE (изменение пароля) ────────────────────
+
+function openProfileModal() {
+  if (!currentUser) {
+    toast('Пользователь не авторизован', 'error');
+    return;
+  }
+
+  document.getElementById('profile-username').textContent = currentUser.username || 'Неизвестно';
+  document.getElementById('profile-email').textContent = currentUser.email || 'Не указан';
+
+  document.getElementById('profile-old-password').value = '';
+  document.getElementById('profile-new-password').value = '';
+  document.getElementById('profile-confirm-password').value = '';
+
+  const errEl = document.getElementById('profile-error');
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+  
+  const successEl = document.getElementById('profile-success');
+  successEl.style.display = 'none';
+  successEl.textContent = '';
+
+  openModal('modal-profile');
+}
+
+async function changePassword() {
+  const errEl = document.getElementById('profile-error');
+  const successEl = document.getElementById('profile-success');
+  
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+  successEl.style.display = 'none';
+  successEl.textContent = '';
+
+  const oldPassword = document.getElementById('profile-old-password').value;
+  const newPassword = document.getElementById('profile-new-password').value;
+  const confirmPassword = document.getElementById('profile-confirm-password').value;
+
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    errEl.textContent = 'Заполните все поля';
+    errEl.classList.add('show');
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    errEl.textContent = 'Новый пароль должен содержать минимум 6 символов';
+    errEl.classList.add('show');
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    errEl.textContent = 'Пароли не совпадают';
+    errEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const r = await api('PATCH', '/auth/change_pass', {
+      old_password: oldPassword,
+      new_password: newPassword
+    });
+
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      errEl.textContent = d.detail || 'Ошибка при смене пароля';
+      errEl.classList.add('show');
+      return;
+    }
+
+    const data = await r.json();
+    
+    if (data.login) currentUser.username = data.login;
+    if (data.email) currentUser.email = data.email;
+    
+    const avatar = document.getElementById('user-avatar');
+    avatar.textContent = (currentUser.username[0] || 'U').toUpperCase();
+
+    successEl.textContent = 'Пароль успешно изменён!';
+    successEl.style.display = 'block';
+    
+    toast('Пароль успешно изменён', 'success');
+
+    setTimeout(() => {
+      closeModal('modal-profile');
+    }, 1500);
+
+  } catch(e) {
+    errEl.textContent = 'Ошибка соединения с сервером';
+    errEl.classList.add('show');
+  }
+}
+
+// ── EDIT ALBUM ────────────────────────────────────
+
+function openEditAlbumModal() {
+  if (!currentAlbum) {
+    toast('Сначала выберите альбом', 'error');
+    return;
+  }
+
+  if (isSharedAlbum) {
+    toast('Вы не можете редактировать общий альбом', 'error');
+    return;
+  }
+
+  document.getElementById('edit-album-title').value = currentAlbum.title || '';
+  document.getElementById('edit-album-desc').value = currentAlbum.description || '';
+
+  const errEl = document.getElementById('edit-album-error');
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+
+  openModal('modal-edit-album');
+}
+
+async function saveAlbumChanges() {
+  const errEl = document.getElementById('edit-album-error');
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+
+  const title = document.getElementById('edit-album-title').value.trim();
+  const description = document.getElementById('edit-album-desc').value.trim();
+
+  if (!title) {
+    errEl.textContent = 'Название альбома не может быть пустым';
+    errEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const r = await api('PATCH', '/albums/', {
+      id: currentAlbum.id,
+      title: title,
+      description: description || null
+    });
+
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      errEl.textContent = d.detail || 'Ошибка при обновлении альбома';
+      errEl.classList.add('show');
+      return;
+    }
+
+    const data = await r.json();
+    
+    // Обновляем текущий альбом
+    currentAlbum.title = data.title;
+    currentAlbum.description = data.description;
+
+    // Обновляем отображение
+    const titleEl = document.getElementById('album-title-heading');
+    const descEl = document.getElementById('album-desc-heading');
+    
+    titleEl.textContent = data.title;
+    descEl.textContent = data.description || '';
+
+    // Обновляем хлебные крошки
+    document.getElementById('breadcrumb-album-name').textContent = data.title;
+
+    closeModal('modal-edit-album');
+    toast('Альбом обновлён', 'success');
+
+  } catch(e) {
+    errEl.textContent = 'Ошибка соединения с сервером';
+    errEl.classList.add('show');
+  }
 }
 
 // ── NAVIGATION ─────────────────────────────────────
@@ -721,13 +977,19 @@ function goPhotos(album, shared = false) {
   document.getElementById('view-photos').style.display = '';
   document.getElementById('breadcrumb').style.display = 'flex';
   document.getElementById('breadcrumb-album-name').textContent = album.title;
-  document.getElementById('album-title-heading').textContent = album.title;
-  document.getElementById('album-desc-heading').textContent = album.description || '';
   
-  // Показываем кнопки управления доступом только для своих альбомов (не общих)
+  const titleEl = document.getElementById('album-title-heading');
+  const descEl = document.getElementById('album-desc-heading');
+  
+  titleEl.textContent = album.title;
+  titleEl.className = 'section-title' + (shared ? '' : ' editable');
+  descEl.textContent = album.description || '';
+  descEl.className = 'section-desc' + (shared ? '' : ' editable');
+  
   const isOwnAlbum = !shared;
   document.getElementById('btn-share-album').style.display = isOwnAlbum ? '' : 'none';
   document.getElementById('btn-manage-shared').style.display = isOwnAlbum ? '' : 'none';
+  document.getElementById('btn-edit-album').style.display = isOwnAlbum ? '' : 'none';
   document.getElementById('btn-delete-album').style.display = isOwnAlbum ? '' : 'none';
   
   loadPhotos(album.id);
@@ -1035,7 +1297,6 @@ async function loadSharedUsers() {
   listEl.innerHTML = '<div class="loading-spinner" style="padding:1rem"><div class="spinner"></div></div>';
   
   try {
-    // Получаем список пользователей, у которых есть доступ к альбому
     const r = await api('GET', `/albums/${currentAlbum.id}/shared-users`);
     
     if (!r.ok) {
@@ -1061,9 +1322,8 @@ async function loadSharedUsers() {
       item.innerHTML = `
         <div class="user-info">
           <span class="user-id">ID: ${user.id}</span>
-          <span class = "user-id">login: ${esc(user.login || 'Пользователь')}</span>
-          
-          ${user.email ? `<span style="color:var(--muted);font-size:12px">email: ${esc(user.email)}</span>` : ''}
+          <span>${esc(user.login || 'Пользователь')}</span>
+          ${user.email ? `<span style="color:var(--muted);font-size:12px">${esc(user.email)}</span>` : ''}
         </div>
         <button class="remove-btn" onclick="removeSharedUser(${user.id})">Удалить</button>
       `;
@@ -1091,7 +1351,6 @@ async function removeSharedUser(userId) {
     }
     
     toast('Доступ успешно удалён', 'success');
-    // Обновляем список
     await loadSharedUsers();
   } catch(e) {
     errEl.textContent = 'Ошибка соединения с сервером';

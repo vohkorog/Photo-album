@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import APIRouter, Depends
 from src.auth.services import user_db
 from fastapi.responses import JSONResponse, RedirectResponse
-from src.auth.schemas import UserLoginScheme, UserCreateScheme
+from src.auth.schemas import UserLoginScheme, UserCreateScheme, UserChangingPassScheme
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -27,8 +27,11 @@ def sigin(data: UserCreateScheme):
     )    
     return f'Здравствуйте, {user.login}'
 
-@router.post('/change_pass')
-def change_pass(new_pass:str, old_pass:str, current_user: dict = Depends(user_db.get_current_user_from_token)):
-    
-    change = user_db.change_pass(user_login=current_user['login'] ,new_password=new_pass, old_password=old_pass, user_id=current_user['id'])
+@router.patch('/change_pass', summary='Изменение пароля у пользователя')
+def change_pass(data:UserChangingPassScheme, current_user: dict = Depends(user_db.get_current_user_from_token)):
+    "Изменение пароля у пользователя"
+    change = user_db.change_pass(user_login=current_user['login'],
+                                 new_password=data.new_password,
+                                 old_password=data.old_password, 
+                                 user_id=current_user['id'])
     return change
