@@ -142,7 +142,8 @@ body {
 .btn-danger { background: var(--danger-light); color: var(--danger); border-color: #fca5a5; }
 .btn-danger:hover { background: #fee2e2; }
 .btn-full { width: 100%; }
-.btn-sm { padding: 7px 12px; font-size: 13px; }
+.btn-sm { padding: 7px 12px; font-size: 13px;}
+.btn-mg {margin-bottom: 16px;}
 .btn-icon { padding: 7px 10px; border-radius: var(--radius-sm); font-size: 16px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: border-color 0.15s, background 0.15s; }
 .btn-icon:hover { border-color: var(--border-hover); background: var(--bg); }
 
@@ -211,7 +212,6 @@ body {
 }
 .section-title:hover { opacity: 0.7; }
 .section-title.editable::after {
-  content: ' ✏️';
   font-size: 14px;
   opacity: 0.5;
 }
@@ -226,7 +226,6 @@ body {
 }
 .section-desc:hover { opacity: 0.7; }
 .section-desc.editable::after {
-  content: ' ✏️';
   font-size: 12px;
   opacity: 0.5;
 }
@@ -645,16 +644,16 @@ body {
     <div style="margin-top: 1rem;">
       <div class="form-group">
         <label class="form-label">Логин</label>
-        <input class="form-input" id="profile-login" type="text" disabled />
+        <input class="form-input" id="profile-login-input" type="text" disabled />
       </div>
       <div class="form-group">
         <label class="form-label">Email</label>
-        <input class="form-input" id="profile-email" type="email" disabled />
+        <input class="form-input" id="profile-email-input" type="email" disabled />
       </div>
       <div class="form-group">
         <label class="form-label">Пароль</label>
         <div class="password-wrapper">
-          <input class="form-input" id="profile-password" type="password" value="••••••••" disabled />
+          <input class="form-input" id="profile-password-input" type="password" value="••••••••" disabled />
           <button class="btn-icon" onclick="openChangePassModal()" title="Изменить пароль">⚙️</button>
         </div>
       </div>
@@ -665,6 +664,7 @@ body {
     </div>
   </div>
 </div>
+
 
 <!-- Change Password Modal -->
 <div class="modal-overlay" id="modal-edit-pass">
@@ -700,7 +700,7 @@ body {
 <div class="modal-overlay" id="modal-share">
   <div class="modal">
     <div class="modal-title">Поделиться альбомом</div>
-    <button class="btn btn-secondary btn-sm" id="btn-manage-shared" onclick="openManageSharedModal()" style="display:none">👥 Управление доступом</button>
+    <button class="btn btn-secondary btn-sm btn-mg" id="btn-manage-shared" onclick="openManageSharedModal()" style="display:none">👥 Управление доступом</button>
     <div id="share-give">
       <div class="share-info">
         Введите ID пользователя, которому хотите открыть доступ к альбому «<span id="share-album-name"></span>».
@@ -867,8 +867,8 @@ function openProfileModal() {
   // Заполняем информацию о пользователе
   document.getElementById('profile-username-display').textContent = currentUser.username || 'Неизвестно';
   document.getElementById('profile-email-display').textContent = currentUser.email || 'Не указан';
-  document.getElementById('profile-login').value = currentUser.username || '';
-  document.getElementById('profile-email').value = currentUser.email || '';
+  document.getElementById('profile-login-input').value = currentUser.username || '';
+  document.getElementById('profile-email-input').value = currentUser.email || '';
 
   openModal('modal-profile');
 }
@@ -909,12 +909,6 @@ async function changePassword() {
 
   if (!oldPassword || !newPassword || !confirmPassword) {
     errEl.textContent = 'Заполните все поля';
-    errEl.classList.add('show');
-    return;
-  }
-
-  if (newPassword.length < 6) {
-    errEl.textContent = 'Новый пароль должен содержать минимум 6 символов';
     errEl.classList.add('show');
     return;
   }
