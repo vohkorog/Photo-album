@@ -109,7 +109,7 @@ class user_db:
                         "email": user.email}
             
     @staticmethod
-    def change_login(new_login: str, user_id):
+    def change_login(new_login: str, user_id: int):
         with session_factory() as session:
             user = session.get(UserModel, user_id)
             user.login = new_login
@@ -120,5 +120,16 @@ class user_db:
                 "email": user.email
                     }
 
+    @staticmethod
+    def change_email(new_email: str, user_id: int):
+        with session_factory() as session:
+            user = session.get(UserModel, user_id)
+            user.email = new_email
+            session.commit()
+            return {
+                "id" : user.id,
+                "login" : user.login,
+                "email": user.email
+                    }
 
         

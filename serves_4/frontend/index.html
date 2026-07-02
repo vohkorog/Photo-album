@@ -102,6 +102,10 @@ body {
   color: var(--muted);
   cursor: not-allowed;
 }
+.form-input.editable {
+  background: var(--surface);
+  color: var(--text);
+}
 
 .password-wrapper {
   display: flex;
@@ -644,7 +648,7 @@ body {
     <div style="margin-top: 1rem;">
       <div class="form-group">
         <label class="form-label">Логин</label>
-        <input class="form-input" id="profile-login-input" type="text" disabled />
+        <input class="form-input editable" id="profile-login-input" type="text" />
       </div>
       <div class="form-group">
         <label class="form-label">Email</label>
@@ -659,12 +663,15 @@ body {
       </div>
     </div>
 
+    <div id="profile-error" class="error-msg"></div>
+    <div id="profile-success" class="success-msg"></div>
+
     <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-profile')">Закрыть</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-profile')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveProfileChanges()">Сохранить</button>
     </div>
   </div>
 </div>
-
 
 <!-- Change Password Modal -->
 <div class="modal-overlay" id="modal-edit-pass">
@@ -813,10 +820,11 @@ async function doLogin() {
       body: JSON.stringify({ username, password })
     });
     const data = await r.json();
-    console.log(data, '222')
     if (!r.ok) { showAuthError(data.detail || 'Ошибка входа'); return; }
     token = data.access_token;
     currentUser = { username, email: data.email };
+    localStorage.setItem('auth_token', token);
+    localStorage.setItem('current_user', JSON.stringify(currentUser));
     enterApp();
   } catch(e) { showAuthError('Не удалось подключиться к серверу'); }
 }
@@ -844,8 +852,43 @@ async function doSignin() {
 
 function doLogout() {
   token = null; currentUser = null; currentAlbum = null;
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('current_user');
   document.getElementById('page-app').classList.remove('active');
   document.getElementById('page-auth').classList.add('active');
+}
+
+function restoreSession() {
+  const savedToken = localStorage.getItem('auth_token');
+  const savedUser = localStorage.getItem('current_user');
+  
+  if (savedToken && savedUser) {
+    token = savedToken;
+    currentUser = JSON.parse(savedUser);
+    
+    fetch(BASE + '/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(response => {
+      if (response.ok) {
+        enterApp();
+      } else {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('current_user');
+        token = null;
+        currentUser = null;
+        document.getElementById('page-auth').classList.add('active');
+        document.getElementById('page-app').classList.remove('active');
+      }
+    })
+    .catch(() => {
+      document.getElementById('page-auth').classList.add('active');
+      document.getElementById('page-app').classList.remove('active');
+    });
+  } else {
+    document.getElementById('page-auth').classList.add('active');
+    document.getElementById('page-app').classList.remove('active');
+  }
 }
 
 function enterApp() {
@@ -857,7 +900,7 @@ function enterApp() {
   goAlbums();
 }
 
-// ── PROFILE (отображение данных и смена пароля) ──
+// ── PROFILE ────────────────────────────────────────
 
 function openProfileModal() {
   if (!currentUser) {
@@ -865,25 +908,93 @@ function openProfileModal() {
     return;
   }
 
-  // Заполняем информацию о пользователе
   document.getElementById('profile-username-display').textContent = currentUser.username || 'Неизвестно';
   document.getElementById('profile-email-display').textContent = currentUser.email || 'Не указан';
   document.getElementById('profile-login-input').value = currentUser.username || '';
   document.getElementById('profile-email-input').value = currentUser.email || '';
 
+  // Скрываем сообщения
+  const errEl = document.getElementById('profile-error');
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+  
+  const successEl = document.getElementById('profile-success');
+  successEl.classList.remove('show');
+  successEl.textContent = '';
+
   openModal('modal-profile');
 }
 
+async function saveProfileChanges() {
+  const errEl = document.getElementById('profile-error');
+  const successEl = document.getElementById('profile-success');
+  
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+  successEl.classList.remove('show');
+  successEl.textContent = '';
+
+  const newLogin = document.getElementById('profile-login-input').value.trim();
+
+  if (!newLogin) {
+    errEl.textContent = 'Логин не может быть пустым';
+    errEl.classList.add('show');
+    return;
+  }
+
+  if (newLogin === currentUser.username) {
+    errEl.textContent = 'Логин не изменился';
+    errEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const r = await api('PATCH', '/auth/change/login', {
+      new_login: newLogin
+    });
+
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      errEl.textContent = d.detail || 'Ошибка при смене логина';
+      errEl.classList.add('show');
+      return;
+    }
+
+    const data = await r.json();
+    
+    // Обновляем данные пользователя
+    currentUser.username = data.login;
+    currentUser.email = data.email;
+    
+    // Обновляем localStorage
+    localStorage.setItem('current_user', JSON.stringify(currentUser));
+    
+    // Обновляем аватарку
+    const avatar = document.getElementById('user-avatar');
+    avatar.textContent = (currentUser.username[0] || 'U').toUpperCase();
+
+    // Обновляем отображение в профиле
+    document.getElementById('profile-username-display').textContent = currentUser.username;
+    document.getElementById('profile-login-input').value = currentUser.username;
+
+    successEl.textContent = 'Логин успешно изменён!';
+    successEl.classList.add('show');
+    
+    toast('Логин успешно изменён', 'success');
+
+  } catch(e) {
+    errEl.textContent = 'Ошибка соединения с сервером';
+    errEl.classList.add('show');
+  }
+}
+
 function openChangePassModal() {
-  // Закрываем профиль и открываем окно смены пароля
   closeModal('modal-profile');
   
-  // Очищаем поля
   document.getElementById('profile-old-password').value = '';
   document.getElementById('profile-new-password').value = '';
   document.getElementById('profile-confirm-password').value = '';
   
-  // Скрываем сообщения
   const errEl = document.getElementById('pass-error');
   errEl.classList.remove('show');
   errEl.textContent = '';
@@ -938,6 +1049,8 @@ async function changePassword() {
     if (data.login) currentUser.username = data.login;
     if (data.email) currentUser.email = data.email;
     
+    localStorage.setItem('current_user', JSON.stringify(currentUser));
+    
     const avatar = document.getElementById('user-avatar');
     avatar.textContent = (currentUser.username[0] || 'U').toUpperCase();
 
@@ -948,7 +1061,6 @@ async function changePassword() {
 
     setTimeout(() => {
       closeModal('modal-edit-pass');
-      // Возвращаемся в профиль
       openProfileModal();
     }, 1500);
 
@@ -1011,18 +1123,15 @@ async function saveAlbumChanges() {
 
     const data = await r.json();
     
-    // Обновляем текущий альбом
     currentAlbum.title = data.title;
     currentAlbum.description = data.description;
 
-    // Обновляем отображение
     const titleEl = document.getElementById('album-title-heading');
     const descEl = document.getElementById('album-desc-heading');
     
     titleEl.textContent = data.title;
     descEl.textContent = data.description || '';
 
-    // Обновляем хлебные крошки
     document.getElementById('breadcrumb-album-name').textContent = data.title;
 
     closeModal('modal-edit-album');
@@ -1298,7 +1407,7 @@ function closeLightbox() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
-// ── SHARE (Добавление пользователя) ──────────────
+// ── SHARE ──────────────────────────────────────────
 
 async function openShareModal() {
   if (!currentAlbum) {
@@ -1347,7 +1456,7 @@ async function doShareAlbum() {
   }
 }
 
-// ── MANAGE SHARED (Удаление пользователей) ──────
+// ── MANAGE SHARED ──────────────────────────────────
 
 async function openManageSharedModal() {
   if (!currentAlbum) {
@@ -1433,7 +1542,11 @@ async function removeSharedUser(userId) {
   }
 }
 
-// ── Обработчик для закрытия модалок по клику вне окна ──
+// ── ЗАПУСК ─────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', function() {
+  restoreSession();
+});
 
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', (e) => {
