@@ -813,9 +813,10 @@ async function doLogin() {
       body: JSON.stringify({ username, password })
     });
     const data = await r.json();
+    console.log(data, '222')
     if (!r.ok) { showAuthError(data.detail || 'Ошибка входа'); return; }
     token = data.access_token;
-    currentUser = { username };
+    currentUser = { username, email: data.email };
     enterApp();
   } catch(e) { showAuthError('Не удалось подключиться к серверу'); }
 }
@@ -920,7 +921,7 @@ async function changePassword() {
   }
 
   try {
-    const r = await api('PATCH', '/auth/change_pass', {
+    const r = await api('PATCH', '/auth/change/pass', {
       old_password: oldPassword,
       new_password: newPassword
     });

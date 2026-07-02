@@ -52,7 +52,8 @@ class user_db:
             "access_token": access_token,
             "token_type": "bearer",
             "user_id": user.id,
-            "login": user.login
+            "login": user.login,
+            "email" : user.email
         }
     
     
@@ -106,5 +107,18 @@ class user_db:
                 return {"id" : user.id,
                         "login" : user.login,
                         "email": user.email}
+            
+    @staticmethod
+    def change_login(new_login: str, user_id):
+        with session_factory() as session:
+            user = session.get(UserModel, user_id)
+            user.login = new_login
+            session.commit()
+            return {
+                "id" : user.id,
+                "login" : user.login,
+                "email": user.email
+                    }
+
 
         
