@@ -652,7 +652,7 @@ body {
       </div>
       <div class="form-group">
         <label class="form-label">Email</label>
-        <input class="form-input editable" id="profile-email-input" type="email"/>
+        <input class="form-input editable" id="profile-email-input" type="email" />
       </div>
       <div class="form-group">
         <label class="form-label">Пароль</label>
@@ -935,37 +935,88 @@ async function saveProfileChanges() {
   successEl.textContent = '';
 
   const newLogin = document.getElementById('profile-login-input').value.trim();
+  const newEmail = document.getElementById('profile-email-input').value.trim();
 
-  if (!newLogin) {
+  // Проверяем, есть ли вообще изменения
+  const loginChanged = newLogin !== currentUser.username;
+  const emailChanged = newEmail !== currentUser.email;
+
+  if (!loginChanged && !emailChanged) {
+    errEl.textContent = 'Нет изменений для сохранения';
+    errEl.classList.add('show');
+    return;
+  }
+
+  // Проверяем логин
+  if (loginChanged && !newLogin) {
     errEl.textContent = 'Логин не может быть пустым';
     errEl.classList.add('show');
     return;
   }
 
-  if (newLogin === currentUser.username) {
-    errEl.textContent = 'Логин не изменился';
-    errEl.classList.add('show');
-    return;
+  // Проверяем email
+  if (emailChanged) {
+    if (!newEmail) {
+      errEl.textContent = 'Email не может быть пустым';
+      errEl.classList.add('show');
+      return;
+    }
+    // Простая проверка email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      errEl.textContent = 'Введите корректный email (например, user@example.com)';
+      errEl.classList.add('show');
+      return;
+    }
   }
 
   try {
-    const r = await api('PATCH', '/auth/change/login', {
-      new_login: newLogin
-    });
+    let updated = false;
 
-    if (!r.ok) {
-      const d = await r.json().catch(() => ({}));
-      errEl.textContent = d.detail || 'Ошибка при смене логина';
+    // Изменяем логин, если он изменился
+    if (loginChanged) {
+      const r = await api('PATCH', '/auth/change/login', {
+        new_login: newLogin
+      });
+
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        errEl.textContent = d.detail || 'Ошибка при смене логина';
+        errEl.classList.add('show');
+        return;
+      }
+
+      const data = await r.json();
+      currentUser.username = data.login;
+      if (data.email) currentUser.email = data.email;
+      updated = true;
+    }
+
+    // Изменяем email, если он изменился
+    if (emailChanged) {
+      const r = await api('PATCH', '/auth/change/email', {
+        new_email: newEmail
+      });
+
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        errEl.textContent = d.detail || 'Ошибка при смене email';
+        errEl.classList.add('show');
+        return;
+      }
+
+      const data = await r.json();
+      currentUser.email = data.email;
+      if (data.login) currentUser.username = data.login;
+      updated = true;
+    }
+
+    if (!updated) {
+      errEl.textContent = 'Не удалось сохранить изменения';
       errEl.classList.add('show');
       return;
     }
 
-    const data = await r.json();
-    
-    // Обновляем данные пользователя
-    currentUser.username = data.login;
-    currentUser.email = data.email;
-    
     // Обновляем localStorage
     localStorage.setItem('current_user', JSON.stringify(currentUser));
     
@@ -975,12 +1026,18 @@ async function saveProfileChanges() {
 
     // Обновляем отображение в профиле
     document.getElementById('profile-username-display').textContent = currentUser.username;
+    document.getElementById('profile-email-display').textContent = currentUser.email;
     document.getElementById('profile-login-input').value = currentUser.username;
+    document.getElementById('profile-email-input').value = currentUser.email;
 
-    successEl.textContent = 'Логин успешно изменён!';
+    const changes = [];
+    if (loginChanged) changes.push('логин');
+    if (emailChanged) changes.push('email');
+    
+    successEl.textContent = `Успешно обновлены: ${changes.join(' и ')}!`;
     successEl.classList.add('show');
     
-    toast('Логин успешно изменён', 'success');
+    toast(`Обновлены: ${changes.join(', ')}`, 'success');
 
   } catch(e) {
     errEl.textContent = 'Ошибка соединения с сервером';
@@ -1027,6 +1084,12 @@ async function changePassword() {
 
   if (newPassword !== confirmPassword) {
     errEl.textContent = 'Пароли не совпадают';
+    errEl.classList.add('show');
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    errEl.textContent = 'Пароль должен содержать минимум 6 символов';
     errEl.classList.add('show');
     return;
   }
