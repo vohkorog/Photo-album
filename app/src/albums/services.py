@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 
 # Папка для загрузки фото
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # на уровень выше
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # на уровень выше
 UPLOAD_DIR = BASE_DIR / "uploads" / "photos"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
